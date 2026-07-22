@@ -1,30 +1,17 @@
-// api/upload.js
-const { put, list } = require('@vercel/blob');
+const { put } = require('@vercel/blob');
 
 function slugify(s) {
-  return (s || 'untitled')
-    .toString()
-    .trim()
-    .replace(/[^a-zA-Z0-9ก-๙\-_.]+/g, '-')
-    .slice(0, 80) || 'untitled';
+  return (
+    (s || 'untitled')
+      .toString()
+      .trim()
+      .replace(/[^a-zA-Z0-9ก-๙\-_.]+/g, '-')
+      .slice(0, 60) || 'untitled'
+  );
 }
 
-async function readManifest() {
-  const found = await list({ prefix: 'manifest.json', limit: 1 });
-  if (!found.blobs.length) return [];
-  const resp = await fetch(found.blobs[0].url, { cache: 'no-store' });
-  if (!resp.ok) return [];
-  return resp.json();
-}
-
-async function writeManifest(items) {
-  await put('manifest.json', JSON.stringify(items), {
-    access: 'public',
-    allowOverwrite: true,
-    addRandomSuffix: false,
-    contentType: 'application/json',
-    cacheControlMaxAge: 60,
-  });
+function encodeMeta(obj) {
+  return Buffer.from(JSON.stringify(obj), 'utf8').toString('base64url');
 }
 
 module.exports = async (req, res) => {
@@ -40,32 +27,26 @@ module.exports = async (req, res) => {
     const buffer = Buffer.from(base64Data, 'base64');
     const deptSlug = slugify(department);
     const ts = Date.now();
-    const safeFileName = slugify(fileName || 'plan.jpg');
-    const pathname = `images/${weekStart}/${deptSlug}/${ts}-${safeFileName}`;
+    const rand = Math.random().toString(36).slice(2, 8);
+    const metaToken = encodeMeta({
+      weekLabel: weekLabel || weekStart,
+      department: department || '',
+      fileName: fileName || 'plan.jpg',
+      uploadedBy: uploadedBy || '',
+    });
+    const ext = mimeType && mimeType.includes('png') ? 'png' : 'jpg';
+    // metaToken lives in its own path segment so parsing it back never
+    // has to guess where a delimiter is — no shared manifest to go stale.
+    const pathname = `images/${weekStart}/${deptSlug}/${ts}-${rand}/${metaToken}.${ext}`;
 
     const blob = await put(pathname, buffer, {
       access: 'public',
       contentType: mimeType || 'image/jpeg',
-      addRandomSuffix: true,
+      addRandomSuffix: false,
     });
 
-    const items = await readManifest();
-    const id = ts + '-' + Math.random().toString(36).slice(2, 8);
-    items.push({
-      id,
-      weekStart,
-      weekLabel: weekLabel || weekStart,
-      department: department || '',
-      fileName: fileName || '',
-      url: blob.url,
-      pathname: blob.pathname,
-      uploadedBy: uploadedBy || '',
-      uploadedAt: new Date().toISOString(),
-    });
-    await writeManifest(items);
-
-    return res.status(200).json({ success: true, id, url: blob.url });
+    return res.status(200).json({ success: true, id: blob.pathname, url: blob.url });
   } catch (err) {
-    return res.status(500).json({ success: false, error: String(err && err.message || err) });
+    return res.status(500).json({ success: false, error: String((err && err.message) || err) });
   }
 };
