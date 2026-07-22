@@ -669,7 +669,7 @@
     const it = lightboxList[lightboxIndex];
     if (!confirm('ลบรูปนี้ใช่หรือไม่?')) return;
     try{
-      const res = await apiPost('/api/delete', {id: it.id});
+      const res = await apiPost('/api/delete', {url: it.url});
       if (res.success){
         showToast('ลบรูปแล้ว');
         lightbox.classList.remove('open');
