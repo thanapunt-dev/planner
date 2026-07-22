@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผนผลิตนาวังรายสัปดาห์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-900:#0B1F3A;
+    --navy-800:#122A4D;
+    --navy-700:#1B3A63;
+    --gold-500:#C9A227;
+    --gold-600:#B08D1F;
+    --gold-100:#F6ECC9;
+    --bg:#F3F5F9;
+    --card:#FFFFFF;
+    --text-900:#16202B;
+    --text-600:#4B5563;
+    --text-400:#8A93A0;
+    --border:#E3E7EE;
+    --danger:#C0392B;
+    --danger-bg:#FBEAE8;
+    --success:#2E7D52;
+    --radius:14px;
+    --shadow:0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text-900);
+    font-family:'Sarabun',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:80px;
+  }
+  h1,h2,h3,.display{font-family:'Kanit',system-ui,sans-serif;}
+
+  header.top{
+    background:linear-gradient(135deg,var(--navy-900),var(--navy-700));
+    color:#fff;
+    padding:22px 18px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::after{
+    content:"";
+    position:absolute; right:-40px; top:-60px;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle, rgba(201,162,39,.25), transparent 70%);
+  }
+  .top-row{position:relative;z-index:1;}
+  .brand-tag{
+    display:inline-block;font-size:11px;letter-spacing:.14em;font-weight:600;
+    color:var(--gold-500);text-transform:uppercase;margin-bottom:4px;
+  }
+  header.top h1{font-size:20px;margin:0 0 4px;font-weight:600;line-height:1.3;}
+  header.top p{margin:0;font-size:13px;color:rgba(255,255,255,.65);}
+
+  main{max-width:760px;margin:0 auto;padding:0 14px;}
+
+  .toolbar{
+    margin-top:-18px;position:relative;z-index:2;
+    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:16px;display:flex;flex-direction:column;gap:12px;
+  }
+  .toolbar .week-now{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .week-now .label-eyebrow{font-size:11px;color:var(--text-400);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+  .week-now .week-text{font-size:16px;font-weight:600;color:var(--navy-900);font-family:'Kanit',sans-serif;}
+  .btn{
+    border:none;border-radius:10px;padding:11px 16px;font-family:'Sarabun',sans-serif;
+    font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;
+    gap:8px;justify-content:center;transition:transform .1s, box-shadow .15s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .btn-primary{background:var(--gold-500);color:var(--navy-900);}
+  .btn-primary:hover{background:var(--gold-600);}
+  .btn-outline{background:#fff;color:var(--navy-800);border:1px solid var(--border);}
+  .btn-outline:hover{border-color:var(--navy-700);}
+  .btn-block{width:100%;}
+  .btn-danger{background:var(--danger-bg);color:var(--danger);}
+
+  select, input[type=text], input[type=date]{
+    font-family:'Sarabun',sans-serif;font-size:14px;padding:10px 12px;
+    border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text-900);
+    width:100%;
+  }
+  select:focus, input:focus{outline:2px solid var(--navy-700);outline-offset:1px;}
+  label.field-label{font-size:12px;font-weight:600;color:var(--text-600);margin-bottom:6px;display:block;}
+
+  .filter-row{display:flex;gap:8px;}
+  .filter-row select{flex:1;}
+
+  .weeks{margin-top:20px;display:flex;flex-direction:column;gap:14px;}
+  .week-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .week-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:14px 16px;cursor:pointer;user-select:none;
+  }
+  .week-head:hover{background:#FAFBFD;}
+  .week-head .wh-left{display:flex;align-items:center;gap:10px;}
+  .week-chip{
+    background:var(--navy-900);color:#fff;font-size:11px;font-weight:700;
+    padding:4px 9px;border-radius:999px;font-family:'Kanit',sans-serif;letter-spacing:.02em;
+  }
+  .week-chip.current{background:var(--gold-500);color:var(--navy-900);}
+  .week-head .wh-title{font-size:15px;font-weight:600;color:var(--navy-900);font-family:'Kanit',sans-serif;}
+  .week-head .wh-count{font-size:12px;color:var(--text-400);}
+  .chevron{transition:transform .2s;color:var(--text-400);}
+  .week-card.collapsed .chevron{transform:rotate(-90deg);}
+  .week-body{padding:0 16px 16px;}
+  .week-card.collapsed .week-body{display:none;}
+
+  .dept-groups{display:flex;flex-direction:column;gap:14px;}
+  .dept-label{font-size:12px;font-weight:700;color:var(--navy-700);margin-bottom:8px;
+    display:flex;align-items:center;gap:6px;}
+  .dept-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold-500);}
+  .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;}
+  .thumb{
+    position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1/1;
+    background:var(--bg);cursor:pointer;border:1px solid var(--border);
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--text-400);
+  }
+  .empty-state .display{font-size:16px;color:var(--navy-900);margin-bottom:6px;}
+  .empty-state p{font-size:13px;margin:0 0 16px;}
+
+  .fab{
+    position:fixed;right:18px;bottom:22px;z-index:20;
+    box-shadow:0 8px 20px rgba(11,31,58,.35);border-radius:999px;padding:14px 20px;
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(11,19,32,.55);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+  .modal{
+    background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;
+    max-height:92vh;overflow-y:auto;padding:20px;
+    transform:translateY(24px);transition:transform .25s;
+  }
+  .overlay.open .modal{transform:translateY(0);}
+  @media (min-width:600px){
+    .overlay{align-items:center;}
+    .modal{border-radius:18px;}
+  }
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .modal-head h2{font-size:17px;margin:0;color:var(--navy-900);}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--text-400);cursor:pointer;line-height:1;}
+  .field{margin-bottom:14px;}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .chip{
+    padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:#fff;
+    font-size:13px;cursor:pointer;color:var(--text-600);
+  }
+  .chip.active{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+
+  .file-drop{
+    border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;
+    color:var(--text-400);font-size:13px;cursor:pointer;
+  }
+  .file-drop:hover{border-color:var(--navy-700);color:var(--navy-700);}
+  .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:10px;}
+  .preview-item{position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+  .preview-item img{width:100%;height:100%;object-fit:cover;}
+  .preview-item .rm{
+    position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;
+    border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;
+  }
+
+  .upload-progress{font-size:12px;color:var(--text-600);margin-top:10px;display:none;}
+
+  /* Lightbox */
+  .lightbox{
+    position:fixed;inset:0;background:rgba(6,10,18,.94);z-index:60;
+    display:none;flex-direction:column;
+  }
+  .lightbox.open{display:flex;}
+  .lb-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;color:#fff;}
+  .lb-info{font-size:13px;color:rgba(255,255,255,.75);}
+  .lb-info b{color:#fff;display:block;font-size:14px;margin-bottom:2px;}
+  .lb-body{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0 8px;}
+  .lb-body img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;}
+  .lb-nav{
+    background:rgba(255,255,255,.12);border:none;color:#fff;width:42px;height:42px;
+    border-radius:50%;font-size:18px;cursor:pointer;flex:none;
+  }
+  .lb-bottom{display:flex;justify-content:center;gap:10px;padding:16px;}
+  .icon-btn{
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+    color:#fff;width:38px;height:38px;border-radius:10px;flex:none;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:background .15s;font-size:20px;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.2);}
+
+  .toast-wrap{position:fixed;left:0;right:0;bottom:90px;display:flex;justify-content:center;z-index:80;pointer-events:none;}
+  .toast{
+    background:var(--navy-900);color:#fff;padding:10px 18px;border-radius:999px;
+    font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.25);
+    opacity:0;transform:translateY(10px);transition:all .25s;
+    max-width:80vw;text-align:center;
+  }
+  .toast.error{background:var(--danger);}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  .spinner{
+    width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;animation:spin .7s linear infinite;display:inline-block;
+  }
+  .spinner.dark{border:2px solid rgba(11,31,58,.2);border-top-color:var(--navy-900);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-row">
+    <span class="brand-tag">STC · โรงงานนาวัง</span>
+    <h1>แผนผลิตนาวังรายสัปดาห์</h1>
+    <p>เก็บภาพแผนสั่งผลิตประจำสัปดาห์ ดูย้อนหลังได้ทุกไซต์/ทุกเครื่อง</p>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="week-now">
+      <div>
+        <div class="label-eyebrow">สัปดาห์ปัจจุบัน</div>
+        <div class="week-text" id="currentWeekText">—</div>
+      </div>
+      <button class="btn btn-primary" id="btnUploadTop">+ เพิ่มรูป</button>
+    </div>
+    <div class="filter-row">
+      <select id="filterDept">
+        <option value="">ทุกแผนก/สายผลิต</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="weeksContainer" class="weeks"></div>
+</main>
+
+<button class="btn btn-primary fab" id="btnUploadFab">+ เพิ่มรูปแผนผลิต</button>
+
+<!-- Upload Modal -->
+<div class="overlay" id="uploadOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>เพิ่มรูปแผนผลิต</h2>
+      <button class="modal-close" id="closeUpload">&times;</button>
+    </div>
+
+    <div class="field">
+      <label class="field-label">สัปดาห์ (วันจันทร์ที่เริ่มสัปดาห์)</label>
+      <input type="date" id="weekStartInput">
+    </div>
+    <div class="field">
+      <label class="field-label">ป้ายชื่อสัปดาห์ (แก้ไขได้ ให้ตรงกับที่เขียนในแผน)</label>
+      <input type="text" id="weekLabelInput" placeholder="เช่น 20-26 ก.ค. 2569">
+    </div>
+
+    <div class="field">
+      <label class="field-label">แผนก / สายผลิต</label>
+      <div class="chip-row" id="deptChips"></div>
+      <input type="text" id="deptInput" placeholder="พิมพ์ชื่อแผนก/สายผลิต หรือเลือกจากด้านบน">
+    </div>
+
+    <div class="field">
+      <label class="field-label">รูปแผนผลิต (เลือกได้หลายรูป)</label>
+      <div class="file-drop" id="fileDropZone">แตะเพื่อเลือกรูป หรือถ่ายภาพ</div>
+      <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">ผู้บันทึก</label>
+      <input type="text" id="uploaderInput" placeholder="ชื่อผู้อัปโหลด">
+    </div>
+
+    <div class="upload-progress" id="uploadProgress"></div>
+    <button class="btn btn-primary btn-block" id="btnSubmitUpload">บันทึกรูปแผนผลิต</button>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <div class="lb-top">
+    <div class="lb-info">
+      <b id="lbDept">—</b>
+      <span id="lbMeta">—</span>
+    </div>
+    <button class="icon-btn" id="lbClose">&times;</button>
+  </div>
+  <div class="lb-body">
+    <button class="lb-nav" id="lbPrev">&#8249;</button>
+    <img id="lbImg" src="" alt="">
+    <button class="lb-nav" id="lbNext">&#8250;</button>
+  </div>
+  <div class="lb-bottom">
+    <button class="btn btn-danger" id="lbDelete">ลบรูปนี้</button>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<script>
+(function(){
+  const LS_NAME = 'napp_uploader_name';
+  const BASE_DEPTS = ['ท่อ1','ท่อ3','บ่อพัก (ผู้รับเหมา)','บ่อพัก MC','งานรั้ว (รายวัน)','Box Culvert','โรงทางเท้า'];
+  const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  let allItems = [];
+  let knownDepts = [...BASE_DEPTS];
+  let selectedFiles = []; // {file, dataUrl}
+  let selectedDept = '';
+  let lightboxList = [];
+  let lightboxIndex = 0;
+
+  // ---------- utils ----------
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function getMonday(d){
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    date.setDate(date.getDate() + diff);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+  function weekLabelFromMonday(monday){
+    const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+    const yearBE = sunday.getFullYear() + 543;
+    if (monday.getMonth() === sunday.getMonth()){
+      return monday.getDate()+'-'+sunday.getDate()+' '+THAI_MONTHS[sunday.getMonth()]+' '+yearBE;
+    }
+    return monday.getDate()+' '+THAI_MONTHS[monday.getMonth()]+' - '+sunday.getDate()+' '+THAI_MONTHS[sunday.getMonth()]+' '+yearBE;
+  }
+  function showToast(msg, isError){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=> t.className='toast', 2600);
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- init ----------
+  const todayMonday = getMonday(new Date());
+  document.getElementById('currentWeekText').textContent = weekLabelFromMonday(todayMonday);
+  document.getElementById('weekStartInput').value = isoDate(todayMonday);
+  document.getElementById('weekLabelInput').value = weekLabelFromMonday(todayMonday);
+  document.getElementById('uploaderInput').value = localStorage.getItem(LS_NAME) || '';
+
+  const deptChipsEl = document.getElementById('deptChips');
+  const filterDeptEl = document.getElementById('filterDept');
+  const deptInputEl = document.getElementById('deptInput');
+
+  function refreshDeptOptions(){
+    const fromData = allItems.map(i=>i.department).filter(Boolean);
+    knownDepts = [...new Set([...BASE_DEPTS, ...fromData])].sort((a,b)=>a.localeCompare(b,'th'));
+    renderDeptChips();
+    renderFilterOptions();
+  }
+
+  function renderDeptChips(){
+    deptChipsEl.innerHTML = '';
+    knownDepts.forEach(d=>{
+      const chip = document.createElement('button');
+      chip.type='button'; chip.className='chip'+(selectedDept===d?' active':''); chip.textContent=d;
+      chip.addEventListener('click', ()=>{
+        selectedDept = d;
+        deptInputEl.value = d;
+        [...deptChipsEl.children].forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+      deptChipsEl.appendChild(chip);
+    });
+    const addChip = document.createElement('button');
+    addChip.type='button'; addChip.className='chip'; addChip.textContent='+ แผนกใหม่';
+    addChip.addEventListener('click', ()=>{
+      selectedDept = '';
+      deptInputEl.value = '';
+      [...deptChipsEl.children].forEach(c=>c.classList.remove('active'));
+      deptInputEl.focus();
+    });
+    deptChipsEl.appendChild(addChip);
+  }
+
+  function renderFilterOptions(){
+    const current = filterDeptEl.value;
+    filterDeptEl.innerHTML = '<option value="">ทุกแผนก/สายผลิต</option>';
+    knownDepts.forEach(d=>{
+      const opt = document.createElement('option'); opt.value=d; opt.textContent=d;
+      filterDeptEl.appendChild(opt);
+    });
+    if (knownDepts.includes(current)) filterDeptEl.value = current;
+  }
+
+  refreshDeptOptions();
+
+  deptInputEl.addEventListener('input', (e)=>{
+    selectedDept = e.target.value;
+    [...deptChipsEl.children].forEach(c=>c.classList.toggle('active', c.textContent===selectedDept));
+  });
+
+  filterDeptEl.addEventListener('change', render);
+
+  loadData();
+
+
+  // ---------- API (same-origin Vercel functions) ----------
+  async function apiGet(path){
+    const res = await fetch(path, { cache:'no-store' });
+    return res.json();
+  }
+  async function apiPost(path, body){
+    const res = await fetch(path, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+
+  async function loadData(){
+    document.getElementById('weeksContainer').innerHTML =
+      '<div class="empty-state"><span class="spinner dark"></span></div>';
+    try{
+      const data = await apiGet('/api/list');
+      if (!data.success) throw new Error(data.error || 'โหลดข้อมูลไม่สำเร็จ');
+      allItems = data.items || [];
+      refreshDeptOptions();
+      render();
+    }catch(err){
+      document.getElementById('weeksContainer').innerHTML =
+        '<div class="empty-state"><div class="display">โหลดข้อมูลไม่สำเร็จ</div><p>'+escapeHtml(String(err.message||err))+'</p></div>';
+    }
+  }
+
+  // ---------- render ----------
+  function render(){
+    const container = document.getElementById('weeksContainer');
+    const filterVal = filterDeptEl.value;
+    let items = allItems.slice();
+    if (filterVal) items = items.filter(i=>i.department===filterVal);
+
+    if (items.length===0){
+      container.innerHTML = '<div class="empty-state"><div class="display">ยังไม่มีรูปแผนผลิต</div><p>กด "+ เพิ่มรูป" เพื่อเริ่มอัปโหลดรูปแผนผลิตสัปดาห์นี้</p></div>';
+      return;
+    }
+
+    const weeksMap = {};
+    items.forEach(it=>{
+      if (!weeksMap[it.weekStart]) weeksMap[it.weekStart] = { label: it.weekLabel, items: [] };
+      weeksMap[it.weekStart].items.push(it);
+    });
+    const weekStarts = Object.keys(weeksMap).sort().reverse();
+    const currentIso = isoDate(todayMonday);
+
+    container.innerHTML = '';
+    weekStarts.forEach(ws=>{
+      const wk = weeksMap[ws];
+      const isCurrent = ws === currentIso;
+      const card = document.createElement('div');
+      card.className = 'week-card';
+
+      const deptGroups = {};
+      wk.items.forEach(it=>{
+        const key = it.department || 'ไม่ระบุแผนก';
+        if (!deptGroups[key]) deptGroups[key] = [];
+        deptGroups[key].push(it);
+      });
+
+      const groupsHtml = Object.keys(deptGroups).map(dept=>{
+        const thumbs = deptGroups[dept].map(it=>{
+          return '<div class="thumb" data-id="'+it.id+'">'+
+            '<img loading="lazy" src="'+it.url+'" alt="'+escapeHtml(it.fileName||'')+'">'+
+          '</div>';
+        }).join('');
+        return '<div><div class="dept-label">'+escapeHtml(dept)+' · '+deptGroups[dept].length+' รูป</div>'+
+          '<div class="thumb-grid">'+thumbs+'</div></div>';
+      }).join('');
+
+      card.innerHTML =
+        '<div class="week-head">'+
+          '<div class="wh-left">'+
+            '<span class="week-chip'+(isCurrent?' current':'')+'">'+(isCurrent?'สัปดาห์นี้':'ย้อนหลัง')+'</span>'+
+            '<span class="wh-title">'+escapeHtml(wk.label)+'</span>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;">'+
+            '<span class="wh-count">'+wk.items.length+' รูป</span>'+
+            '<svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'+
+          '</div>'+
+        '</div>'+
+        '<div class="week-body"><div class="dept-groups">'+groupsHtml+'</div></div>';
+
+      const head = card.querySelector('.week-head');
+      head.addEventListener('click', ()=> card.classList.toggle('collapsed'));
+
+      card.querySelectorAll('.thumb').forEach(el=>{
+        el.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          openLightbox(wk.items, wk.items.findIndex(i=>i.id===el.dataset.id));
+        });
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  // ---------- Upload modal ----------
+  const uploadOverlay = document.getElementById('uploadOverlay');
+  function openUpload(){
+    selectedFiles = [];
+    document.getElementById('previewGrid').innerHTML='';
+    uploadOverlay.classList.add('open');
+  }
+  document.getElementById('btnUploadTop').addEventListener('click', openUpload);
+  document.getElementById('btnUploadFab').addEventListener('click', openUpload);
+  document.getElementById('closeUpload').addEventListener('click', ()=> uploadOverlay.classList.remove('open'));
+
+  document.getElementById('weekStartInput').addEventListener('change', (e)=>{
+    const d = new Date(e.target.value+'T00:00:00');
+    const monday = getMonday(d);
+    e.target.value = isoDate(monday);
+    document.getElementById('weekLabelInput').value = weekLabelFromMonday(monday);
+  });
+
+  const fileDropZone = document.getElementById('fileDropZone');
+  const fileInput = document.getElementById('fileInput');
+  fileDropZone.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files||[]);
+    for (const f of files){
+      const dataUrl = await fileToDataUrl(f);
+      selectedFiles.push({file:f, dataUrl});
+    }
+    renderPreview();
+    fileInput.value='';
+  });
+
+  function fileToDataUrl(file){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=> resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderPreview(){
+    const grid = document.getElementById('previewGrid');
+    grid.innerHTML = '';
+    selectedFiles.forEach((sf, idx)=>{
+      const div = document.createElement('div');
+      div.className='preview-item';
+      div.innerHTML = '<img src="'+sf.dataUrl+'"><button type="button" class="rm">&times;</button>';
+      div.querySelector('.rm').addEventListener('click', ()=>{
+        selectedFiles.splice(idx,1);
+        renderPreview();
+      });
+      grid.appendChild(div);
+    });
+  }
+
+  function compressDataUrl(dataUrl, maxDim, quality){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width, height} = img;
+        if (width > height && width > maxDim){ height = Math.round(height*maxDim/width); width = maxDim; }
+        else if (height >= width && height > maxDim){ width = Math.round(width*maxDim/height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,width,height);
+        resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  document.getElementById('btnSubmitUpload').addEventListener('click', async ()=>{
+    const weekStart = document.getElementById('weekStartInput').value;
+    const weekLabel = document.getElementById('weekLabelInput').value || weekStart;
+    const department = document.getElementById('deptInput').value.trim();
+    const uploader = document.getElementById('uploaderInput').value.trim();
+    if (!weekStart){ showToast('กรุณาเลือกสัปดาห์', true); return; }
+    if (selectedFiles.length===0){ showToast('กรุณาเลือกรูปอย่างน้อย 1 รูป', true); return; }
+    localStorage.setItem(LS_NAME, uploader);
+
+    const progressEl = document.getElementById('uploadProgress');
+    progressEl.style.display='block';
+    const submitBtn = document.getElementById('btnSubmitUpload');
+    submitBtn.disabled = true;
+
+    let okCount = 0;
+    let lastError = '';
+    for (let i=0;i<selectedFiles.length;i++){
+      progressEl.textContent = 'กำลังอัปโหลด '+(i+1)+' / '+selectedFiles.length+' ...';
+      try{
+        const sf = selectedFiles[i];
+        const base64 = await compressDataUrl(sf.dataUrl, 1800, 0.85);
+        const res = await apiPost('/api/upload', {
+          weekStart, weekLabel, department,
+          fileName: sf.file.name,
+          mimeType: 'image/jpeg',
+          base64Data: base64,
+          uploadedBy: uploader
+        });
+        if (res.success) okCount++;
+        else lastError = res.error || 'ไม่ทราบสาเหตุ';
+      }catch(err){
+        console.error(err);
+        lastError = (err && err.message) || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+      }
+    }
+    progressEl.style.display='none';
+    submitBtn.disabled = false;
+    if (okCount > 0){
+      uploadOverlay.classList.remove('open');
+      showToast(okCount+' / '+selectedFiles.length+' รูป อัปโหลดสำเร็จ', okCount<selectedFiles.length);
+      loadData();
+    } else {
+      showToast('อัปโหลดไม่สำเร็จ: '+lastError, true);
+    }
+  });
+
+  // ---------- Lightbox ----------
+  const lightbox = document.getElementById('lightbox');
+  function openLightbox(list, idx){
+    lightboxList = list;
+    lightboxIndex = idx;
+    showLightboxItem();
+    lightbox.classList.add('open');
+  }
+  function showLightboxItem(){
+    const it = lightboxList[lightboxIndex];
+    document.getElementById('lbImg').src = it.url;
+    document.getElementById('lbDept').textContent = it.department || 'ไม่ระบุแผนก';
+    const dt = it.uploadedAt ? new Date(it.uploadedAt).toLocaleString('th-TH') : '';
+    document.getElementById('lbMeta').textContent = (it.uploadedBy||'ไม่ระบุผู้บันทึก') + (dt ? ' · '+dt : '');
+  }
+  document.getElementById('lbClose').addEventListener('click', ()=> lightbox.classList.remove('open'));
+  document.getElementById('lbPrev').addEventListener('click', ()=>{
+    lightboxIndex = (lightboxIndex-1+lightboxList.length)%lightboxList.length;
+    showLightboxItem();
+  });
+  document.getElementById('lbNext').addEventListener('click', ()=>{
+    lightboxIndex = (lightboxIndex+1)%lightboxList.length;
+    showLightboxItem();
+  });
+  document.getElementById('lbDelete').addEventListener('click', async ()=>{
+    const it = lightboxList[lightboxIndex];
+    if (!confirm('ลบรูปนี้ใช่หรือไม่?')) return;
+    try{
+      const res = await apiPost('/api/delete', {id: it.id});
+      if (res.success){
+        showToast('ลบรูปแล้ว');
+        lightbox.classList.remove('open');
+        loadData();
+      } else {
+        showToast(res.error || 'ลบไม่สำเร็จ', true);
+      }
+    }catch(err){
+      showToast('ลบไม่สำเร็จ', true);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
