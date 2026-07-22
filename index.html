@@ -466,6 +466,53 @@
   }
 
   // ---------- render ----------
+  function buildWeekCard(ws, wk, status, chipLabel, startExpanded){
+    const card = document.createElement('div');
+    card.className = 'week-card' + (startExpanded ? '' : ' collapsed');
+
+    const deptGroups = {};
+    wk.items.forEach(it=>{
+      const key = it.department || 'ไม่ระบุแผนก';
+      if (!deptGroups[key]) deptGroups[key] = [];
+      deptGroups[key].push(it);
+    });
+
+    const groupsHtml = Object.keys(deptGroups).map(dept=>{
+      const thumbs = deptGroups[dept].map(it=>{
+        return '<div class="thumb" data-id="'+it.id+'">'+
+          '<img loading="lazy" src="'+it.url+'" alt="'+escapeHtml(it.fileName||'')+'">'+
+        '</div>';
+      }).join('');
+      return '<div><div class="dept-label">'+escapeHtml(dept)+' · '+deptGroups[dept].length+' รูป</div>'+
+        '<div class="thumb-grid">'+thumbs+'</div></div>';
+    }).join('');
+
+    card.innerHTML =
+      '<div class="week-head">'+
+        '<div class="wh-left">'+
+          '<span class="week-chip '+status+'">'+chipLabel+'</span>'+
+          '<span class="wh-title">'+escapeHtml(wk.label)+'</span>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<span class="wh-count">'+wk.items.length+' รูป</span>'+
+          '<svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'+
+        '</div>'+
+      '</div>'+
+      '<div class="week-body"><div class="dept-groups">'+groupsHtml+'</div></div>';
+
+    const head = card.querySelector('.week-head');
+    head.addEventListener('click', ()=> card.classList.toggle('collapsed'));
+
+    card.querySelectorAll('.thumb').forEach(el=>{
+      el.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        openLightbox(wk.items, wk.items.findIndex(i=>i.id===el.dataset.id));
+      });
+    });
+
+    return card;
+  }
+
   function render(){
     const container = document.getElementById('weeksContainer');
     const filterVal = filterDeptEl.value;
@@ -486,61 +533,43 @@
     const allWs = Object.keys(weeksMap);
     const upcoming = allWs.filter(ws=>ws>currentIso).sort();
     const past = allWs.filter(ws=>ws<currentIso).sort().reverse();
-    const weekStarts = [];
-    if (weeksMap[currentIso]) weekStarts.push(currentIso);
-    weekStarts.push(...upcoming, ...past);
 
     container.innerHTML = '';
-    weekStarts.forEach((ws, idx)=>{
-      const wk = weeksMap[ws];
-      let status = 'past', chipLabel = 'ย้อนหลัง';
-      if (ws === currentIso){ status = 'current'; chipLabel = 'สัปดาห์นี้'; }
-      else if (ws > currentIso){ status = 'upcoming'; chipLabel = 'แผนล่วงหน้า'; }
-      const card = document.createElement('div');
-      card.className = 'week-card' + (idx===0 ? '' : ' collapsed');
+    let anyExpanded = false;
 
-      const deptGroups = {};
-      wk.items.forEach(it=>{
-        const key = it.department || 'ไม่ระบุแผนก';
-        if (!deptGroups[key]) deptGroups[key] = [];
-        deptGroups[key].push(it);
-      });
-
-      const groupsHtml = Object.keys(deptGroups).map(dept=>{
-        const thumbs = deptGroups[dept].map(it=>{
-          return '<div class="thumb" data-id="'+it.id+'">'+
-            '<img loading="lazy" src="'+it.url+'" alt="'+escapeHtml(it.fileName||'')+'">'+
-          '</div>';
-        }).join('');
-        return '<div><div class="dept-label">'+escapeHtml(dept)+' · '+deptGroups[dept].length+' รูป</div>'+
-          '<div class="thumb-grid">'+thumbs+'</div></div>';
-      }).join('');
-
-      card.innerHTML =
-        '<div class="week-head">'+
-          '<div class="wh-left">'+
-            '<span class="week-chip '+status+'">'+chipLabel+'</span>'+
-            '<span class="wh-title">'+escapeHtml(wk.label)+'</span>'+
-          '</div>'+
-          '<div style="display:flex;align-items:center;gap:8px;">'+
-            '<span class="wh-count">'+wk.items.length+' รูป</span>'+
-            '<svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'+
-          '</div>'+
-        '</div>'+
-        '<div class="week-body"><div class="dept-groups">'+groupsHtml+'</div></div>';
-
-      const head = card.querySelector('.week-head');
-      head.addEventListener('click', ()=> card.classList.toggle('collapsed'));
-
-      card.querySelectorAll('.thumb').forEach(el=>{
-        el.addEventListener('click', (ev)=>{
-          ev.stopPropagation();
-          openLightbox(wk.items, wk.items.findIndex(i=>i.id===el.dataset.id));
-        });
-      });
-
-      container.appendChild(card);
+    if (weeksMap[currentIso]){
+      container.appendChild(buildWeekCard(currentIso, weeksMap[currentIso], 'current', 'สัปดาห์นี้', true));
+      anyExpanded = true;
+    }
+    upcoming.forEach(ws=>{
+      container.appendChild(buildWeekCard(ws, weeksMap[ws], 'upcoming', 'แผนล่วงหน้า', !anyExpanded));
+      anyExpanded = true;
     });
+
+    if (past.length){
+      const toggleWrap = document.createElement('div');
+      toggleWrap.style.textAlign = 'center';
+      toggleWrap.style.margin = '6px 0';
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'btn btn-outline';
+      toggleBtn.textContent = 'ดูประวัติย้อนหลัง ('+past.length+' สัปดาห์)';
+      toggleWrap.appendChild(toggleBtn);
+      container.appendChild(toggleWrap);
+
+      const pastContainer = document.createElement('div');
+      pastContainer.className = 'weeks hidden';
+      pastContainer.style.marginTop = '14px';
+      past.forEach((ws, idx)=>{
+        pastContainer.appendChild(buildWeekCard(ws, weeksMap[ws], 'past', 'ย้อนหลัง', false));
+      });
+      container.appendChild(pastContainer);
+
+      toggleBtn.addEventListener('click', ()=>{
+        const nowHidden = pastContainer.classList.toggle('hidden');
+        toggleBtn.textContent = (nowHidden ? 'ดูประวัติย้อนหลัง (' : 'ซ่อนประวัติย้อนหลัง (')+past.length+' สัปดาห์)';
+      });
+    }
   }
 
   // ---------- Upload modal ----------
