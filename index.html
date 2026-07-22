@@ -106,6 +106,7 @@
     padding:4px 9px;border-radius:999px;font-family:'Kanit',sans-serif;letter-spacing:.02em;
   }
   .week-chip.current{background:var(--gold-500);color:var(--navy-900);}
+  .week-chip.upcoming{background:#2F6F8F;color:#fff;}
   .week-head .wh-title{font-size:15px;font-weight:600;color:var(--navy-900);font-family:'Kanit',sans-serif;}
   .week-head .wh-count{font-size:12px;color:var(--text-400);}
   .chevron{transition:transform .2s;color:var(--text-400);}
@@ -264,6 +265,10 @@
 
     <div class="field">
       <label class="field-label">สัปดาห์ (วันจันทร์ที่เริ่มสัปดาห์)</label>
+      <div class="chip-row" id="weekQuickChips">
+        <button type="button" class="chip" id="chipThisWeek">สัปดาห์นี้</button>
+        <button type="button" class="chip" id="chipNextWeek">สัปดาห์หน้า</button>
+      </div>
       <input type="date" id="weekStartInput">
     </div>
     <div class="field">
@@ -357,13 +362,22 @@
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  function setWeekFields(monday){
+    document.getElementById('weekStartInput').value = isoDate(monday);
+    document.getElementById('weekLabelInput').value = weekLabelFromMonday(monday);
+  }
 
   // ---------- init ----------
   const todayMonday = getMonday(new Date());
   document.getElementById('currentWeekText').textContent = weekLabelFromMonday(todayMonday);
-  document.getElementById('weekStartInput').value = isoDate(todayMonday);
-  document.getElementById('weekLabelInput').value = weekLabelFromMonday(todayMonday);
+  setWeekFields(todayMonday);
   document.getElementById('uploaderInput').value = localStorage.getItem(LS_NAME) || '';
+
+  document.getElementById('chipThisWeek').addEventListener('click', ()=> setWeekFields(todayMonday));
+  document.getElementById('chipNextWeek').addEventListener('click', ()=>{
+    const next = new Date(todayMonday); next.setDate(next.getDate()+7);
+    setWeekFields(next);
+  });
 
   const deptChipsEl = document.getElementById('deptChips');
   const filterDeptEl = document.getElementById('filterDept');
@@ -468,15 +482,22 @@
       if (!weeksMap[it.weekStart]) weeksMap[it.weekStart] = { label: it.weekLabel, items: [] };
       weeksMap[it.weekStart].items.push(it);
     });
-    const weekStarts = Object.keys(weeksMap).sort().reverse();
     const currentIso = isoDate(todayMonday);
+    const allWs = Object.keys(weeksMap);
+    const upcoming = allWs.filter(ws=>ws>currentIso).sort();
+    const past = allWs.filter(ws=>ws<currentIso).sort().reverse();
+    const weekStarts = [];
+    if (weeksMap[currentIso]) weekStarts.push(currentIso);
+    weekStarts.push(...upcoming, ...past);
 
     container.innerHTML = '';
-    weekStarts.forEach(ws=>{
+    weekStarts.forEach((ws, idx)=>{
       const wk = weeksMap[ws];
-      const isCurrent = ws === currentIso;
+      let status = 'past', chipLabel = 'ย้อนหลัง';
+      if (ws === currentIso){ status = 'current'; chipLabel = 'สัปดาห์นี้'; }
+      else if (ws > currentIso){ status = 'upcoming'; chipLabel = 'แผนล่วงหน้า'; }
       const card = document.createElement('div');
-      card.className = 'week-card';
+      card.className = 'week-card' + (idx===0 ? '' : ' collapsed');
 
       const deptGroups = {};
       wk.items.forEach(it=>{
@@ -498,7 +519,7 @@
       card.innerHTML =
         '<div class="week-head">'+
           '<div class="wh-left">'+
-            '<span class="week-chip'+(isCurrent?' current':'')+'">'+(isCurrent?'สัปดาห์นี้':'ย้อนหลัง')+'</span>'+
+            '<span class="week-chip '+status+'">'+chipLabel+'</span>'+
             '<span class="wh-title">'+escapeHtml(wk.label)+'</span>'+
           '</div>'+
           '<div style="display:flex;align-items:center;gap:8px;">'+
