@@ -1,4 +1,5 @@
 const { put } = require('@vercel/blob');
+const requireKey = require('./_auth');
 
 function slugify(s) {
   return (
@@ -18,6 +19,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
+  if (!requireKey(req, res)) return;
   try {
     const { weekStart, weekLabel, department, fileName, mimeType, base64Data, uploadedBy } = req.body || {};
     if (!weekStart || !base64Data) {

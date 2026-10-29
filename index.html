@@ -441,13 +441,28 @@
     const res = await fetch(path, { cache:'no-store' });
     return res.json();
   }
+  // Upload/delete need the team code; it is asked once and remembered on this device.
+  const LS_KEY = 'planner.teamKey';
+  function getKey(){ try{ return localStorage.getItem(LS_KEY) || ''; }catch(e){ return ''; } }
+  function setKey(v){ try{ v ? localStorage.setItem(LS_KEY, v) : localStorage.removeItem(LS_KEY); }catch(e){} }
   async function apiPost(path, body){
-    const res = await fetch(path, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    return res.json();
+    for (let attempt = 0; attempt < 3; attempt++){
+      let key = getKey();
+      if (!key){
+        key = (window.prompt('ใส่รหัสทีมเพื่ออัปโหลดหรือลบรูป (ขอจากหัวหน้างาน)') || '').trim();
+        if (!key) return {success:false, error:'ต้องใส่รหัสทีมก่อน'};
+        setKey(key);
+      }
+      const res = await fetch(path, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-planner-key':key},
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.status === 401){ setKey(''); window.alert('รหัสทีมไม่ถูกต้อง ลองใหม่อีกครั้ง'); continue; }
+      return data;
+    }
+    return {success:false, error:'รหัสทีมไม่ถูกต้อง'};
   }
 
   async function loadData(){
